@@ -1,0 +1,65 @@
+cd ~/GitHub_Workspace/Class_tim3
+
+cat << 'EOF' > plot_lattice_spectrum.py
+#!/usr/bin/env python3
+"""
+8-Site Symplectic Lattice Modal Energy & Dispersion Spectrum Visualizer
+Generates standalone SVG mapping decay curve of modal energies E_k.
+"""
+
+E_k = [1200.0, 802.2, 593.14, 454.51, 381.46, 351.24, 314.58, 269.84]
+dispersion = [0.0000, 0.2929, 1.0000, 1.7071, 2.0000, 1.7071, 1.0000, 0.2929]
+
+width, height = 720, 420
+pad_x, pad_y = 65, 55
+
+plot_w = width - 2 * pad_x
+plot_h = height - 2 * pad_y
+max_e = 1300.0
+
+points = []
+for i, e in enumerate(E_k):
+    x = pad_x + (i / (len(E_k) - 1)) * plot_w
+    y = height - pad_y - (e / max_e) * plot_h
+    points.append((x, y))
+
+svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
+  <rect width="100%" height="100%" fill="#0d1117" rx="8"/>
+  <text x="{width // 2}" y="32" fill="#e6edf3" font-size="15" font-weight="bold" font-family="sans-serif" text-anchor="middle">
+    8-Site Symplectic Lattice Modal Spectrum (79 Hz Baseline)
+  </text>
+  
+  <!-- Axis Grid Lines -->
+  <line x1="{pad_x}" y1="{height - pad_y}" x2="{width - pad_x}" y2="{height - pad_y}" stroke="#30363d" stroke-width="1.5"/>
+  <line x1="{pad_x}" y1="{pad_y}" x2="{pad_x}" y2="{height - pad_y}" stroke="#30363d" stroke-width="1.5"/>
+"""
+
+# Horizontal grid references
+for e_val in [300, 600, 900, 1200]:
+    grid_y = height - pad_y - (e_val / max_e) * plot_h
+    svg += f'  <line x1="{pad_x}" y1="{grid_y}" x2="{width - pad_x}" y2="{grid_y}" stroke="#21262d" stroke-dasharray="4" stroke-width="1"/>\n'
+    svg += f'  <text x="{pad_x - 10}" y="{grid_y + 4}" fill="#8b949e" font-size="11" font-family="monospace" text-anchor="end">{e_val}J</text>\n'
+
+# Polyline path
+pts_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
+svg += f'  <polyline fill="none" stroke="#58a6ff" stroke-width="3" stroke-linejoin="round" points="{pts_str}"/>\n'
+
+# Data Markers
+for i, ((x, y), e, d) in enumerate(zip(points, E_k, dispersion)):
+    svg += f'  <circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="#58a6ff" stroke="#0d1117" stroke-width="2"/>\n'
+    svg += f'  <text x="{x:.1f}" y="{y - 12:.1f}" fill="#7ee787" font-size="10.5" font-family="monospace" text-anchor="middle">{e:.1f}J</text>\n'
+    svg += f'  <text x="{x:.1f}" y="{height - pad_y + 20}" fill="#8b949e" font-size="11" font-family="sans-serif" text-anchor="middle">M{i}</text>\n'
+    svg += f'  <text x="{x:.1f}" y="{height - pad_y + 34}" fill="#6e7681" font-size="9" font-family="monospace" text-anchor="middle">d={d:.2f}</text>\n'
+
+svg += "</svg>\n"
+
+out_path = "lattice_spectrum.svg"
+with open(out_path, "w", encoding="utf-8") as f:
+    f.write(svg)
+
+print(f"[OK] Generated {out_path} ({len(points)} modes mapped, peak {E_k[0]}J -> floor {E_k[-1]}J)")
+EOF
+
+chmod +x plot_lattice_spectrum.py
+python3 plot_lattice_spectrum.py
+git status -s
