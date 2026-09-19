@@ -17,18 +17,15 @@ import json
 import math
 import sys
 import time
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 
-# Baseline Constants
-TARGET_RPM: float = 4737.6  # 79 Hz * 60 s/min
-STAGE_COUNT: int = 8        # N-site periodic ring lattice
+TARGET_RPM: float = 4737.6
+STAGE_COUNT: int = 8
 TOLERANCE_LIMIT: float = 0.005
 TROYON_BETA_LIMIT: float = 2.80
 
 
 class StateAdmissionWarden:
-    """Evaluates subsystem compliance against scalar bounds and tracks audit logs."""
-
     def __init__(self, tolerance_floor: float = TOLERANCE_LIMIT):
         self.tolerance_floor = tolerance_floor
         self.evaluation_log: List[Dict[str, Any]] = []
@@ -51,8 +48,6 @@ class StateAdmissionWarden:
 
 
 class ToroidalResonatorEvaluator:
-    """Models Effective Pi, compound tolerance stacks, and the zero-jitter Null Point."""
-
     def __init__(self, base_omega: float = TARGET_RPM, stages: int = STAGE_COUNT, tolerance_floor: float = TOLERANCE_LIMIT):
         self.omega_0 = base_omega
         self.m_stages = stages
@@ -77,19 +72,15 @@ class ToroidalResonatorEvaluator:
 
 
 class DiscreteRingLattice:
-    """Models an 8-site periodic discrete ring lattice and normal modal decomposition."""
-
     def __init__(self, sites: int = STAGE_COUNT):
         self.n_sites = sites
 
     def step_recurrence_phase(self, step: int) -> float:
-        """Computes discrete recurrence phase increment: Delta theta = 1.5 * (ln n / n) mod 2*pi."""
         n = max(step + 1, 2)
         delta_theta = 1.5 * (math.log(n) / n)
         return delta_theta % (2.0 * math.pi)
 
     def compute_modal_spectrum(self, step: int) -> List[float]:
-        """Calculates normal mode energies E_k across the 8 sites."""
         energies = []
         for k in range(self.n_sites):
             dispersion = 2.0 * (math.sin((math.pi * k) / self.n_sites) ** 2)
@@ -107,7 +98,6 @@ def generate_verification_report(
     modal_energies: List[float],
     warden: StateAdmissionWarden,
 ) -> str:
-    """Generates an auditable markdown verification report containing system telemetry and state digest."""
     payload = {
         "target_rpm": TARGET_RPM,
         "delta_omega": delta_omega,
@@ -133,9 +123,9 @@ def generate_verification_report(
 
 | Invariant Parameter | Blueprint Limit | Measured / Effective | Unit | Status |
 |---|---|---|---|---|
-| Base Frequency ($\Omega_0$) | 4737.60 | {TARGET_RPM:.2f} | RPM | PASS |
-| Compound Drift ($\Delta \Omega$) | 0.000000 | {delta_omega:+.6f} | RPM | PASS |
-| Circle Metric Ratio ($\pi_{\\text{{eff}}}$) | 3.1415927 | {eff_pi:.7f} | rad ratio | PASS |
+| Base Frequency ($\\Omega_0$) | 4737.60 | {TARGET_RPM:.2f} | RPM | PASS |
+| Compound Drift ($\\Delta \\Omega$) | 0.000000 | {delta_omega:+.6f} | RPM | PASS |
+| Circle Metric Ratio ($\\pi_{{\\text{{eff}}}}$) | 3.1415927 | {eff_pi:.7f} | rad ratio | PASS |
 | Resonator Null Point ($\\theta^*$) | 0.000000 | {null_theta:+.6f} | rad | PASS |
 | Recurrence Shift ($\\Delta \\theta_{{79}}$) | $\\le 0.100000$ | {recurrence_phase:.6f} | rad | PASS |
 
