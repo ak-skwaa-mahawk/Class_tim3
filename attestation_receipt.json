@@ -1,0 +1,18 @@
+{
+  "spec": "TMS-SPEC-084",
+  "digest_sha256": "a44db35bc5f551211e68b497a0e8e8a3a4445ac60586e460a5a63f1f596caff8",
+  "p2tr_mainnet": "bc1pg00dz9cgcx8rw44w3se62cmdm0ysdsf9u2ch3y9wyleancyxnhqsh44nlh",
+  "p2tr_signet": "tb1pg00dz9cgcx8rw44w3se62cmdm0ysdsf9u2ch3y9wyleancyxnhqsqaru9c",
+  "network": "signet",
+  "txid": null,
+  "vout": null,
+  "value_sats": null,
+  "block_hash": null,
+  "block_height": null,
+  "confirmations": 0,
+  "merkle_root": null,
+  "tx_index": null,
+  "merkle_siblings": [],
+  "op_return_vout": null,
+  "status": "ANCHOR_PENDING"
+}
