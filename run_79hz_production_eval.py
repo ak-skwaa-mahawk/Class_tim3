@@ -176,7 +176,11 @@ def generate_verification_report(
 def run_empirical_mode() -> None:
     try:
         import numpy as np
-        from src.transducer_daq import MeasurementBudget, run_empirical_audit
+        from src.transducer_daq import (
+            MeasurementBudget,
+            extract_interpolated_crossings,
+            run_empirical_audit,
+        )
     except ImportError as exc:
         print(f"[ERROR] Failed to import empirical DAQ dependencies: {exc}")
         print("Ensure 'numpy' is installed and 'src/transducer_daq.py' exists.")
@@ -189,14 +193,20 @@ def run_empirical_mode() -> None:
     fs = 200000.0
     duration = 5.0
     t = np.linspace(0, duration, int(fs * duration), endpoint=False)
-    target_carrier_hz = 79.00013333
+    # Drifted driver: 4737.608 RPM -> 78.96013333 Hz
+    target_carrier_hz = 4737.608 / 60.0
 
-    budget = MeasurementBudget()
-    jittered_t = t + np.random.normal(0, budget.clock_jitter_s, len(t))
-    signal = np.sin(2.0 * math.pi * target_carrier_hz * jittered_t)
-    crossings = np.where((signal[:-1] < 0) & (signal[1:] >= 0))[0]
+    # Thermally compensated laboratory environment
+    budget = MeasurementBudget(
+        timebase_rel=1.0e-7,
+        encoder_grating_rel=1.0e-7,
+        thermal_ppm=2.3e-7,
+        clock_jitter_s=1.0e-9,
+    )
+    signal = np.sin(2.0 * math.pi * target_carrier_hz * t)
+    crossings = extract_interpolated_crossings(t, signal)
 
-    audit = run_empirical_audit(t, crossings, budget=budget)
+    audit = run_empirical_audit(crossings, rpm_nominal=TARGET_RPM, budget=budget)
 
     print(f"[MEASURED] Shaft Speed (RPM)     : {audit.measured_rpm:.6f} ± {audit.u_c_rpm:.6f}")
     print(f"[UNCERT]   Type A (Statistical)  : ±{audit.u_a_rpm:.6f} RPM")
