@@ -1,7 +1,20 @@
 #include "timetable_io.h"
 #include "timetable_view.h"
+#include <locale.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 int main(void) {
+    /* Set POSIX locale to user's native environment (enables terminal UTF-8) */
+    setlocale(LC_ALL, "");
+
+#ifdef _WIN32
+    /* Switch Windows console output to UTF-8 code page (CP 65001) */
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
     TimeTable tt;
     timetable_init(&tt);
 
@@ -21,7 +34,7 @@ int main(void) {
     /* Export to disk */
     timetable_export_csv(&tt, "schedule_test.csv");
 
-    /* Read back using the hardened state machine parser */
+    /* Read back using the hardened state-machine parser */
     TimeTable reloaded;
     timetable_import_csv(&reloaded, "schedule_test.csv");
 
