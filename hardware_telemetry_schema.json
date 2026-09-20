@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "device_id": "FPT-BENCH-DAQ-01",
+  "revision": "2026.1",
+  "nominal_targets": {
+    "base_frequency_hz": 79.000000,
+    "nominal_rpm": 4737.600000,
+    "claimed_drift_rpm": 0.008000,
+    "snr_threshold": 2.0
+  },
+  "uncertainty_budget": {
+    "timebase_relative_accuracy": 1.0e-7,
+    "encoder_cpr": 4096,
+    "encoder_grating_error_relative": 5.0e-7,
+    "thermal_expansion_coeff_ppm_per_k": 11.5,
+    "ambient_temp_delta_k": 0.2,
+    "clock_edge_jitter_seconds": 2.5e-8
+  },
+  "channels": {
+    "ch0_encoder": {
+      "type": "quadrature_optical_encoder",
+      "pulses_per_revolution": 4096,
+      "voltage_levels": [0.0, 5.0]
+    },
+    "ch1_piezo": {
+      "type": "piezoelectric_strain",
+      "sensitivity_mv_per_ustrain": 10.2,
+      "noise_floor_rms_mv": 0.12
+    }
+  }
+}
