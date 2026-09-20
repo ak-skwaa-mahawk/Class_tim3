@@ -1,0 +1,8 @@
+*.o
+*.so
+*.pyc
+__pycache__/
+.pytest_cache/
+timetable_app
+yoshida4_lattice
+schedule_test.csv
