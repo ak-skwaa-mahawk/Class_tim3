@@ -28,3 +28,6 @@ clean:
 	rm -f $(TIMETABLE_OBJS) $(CLI_TARGET) $(LIB_TARGET) $(LATTICE_BIN) schedule_test.csv
 
 .PHONY: all clean
+
+audit_invariants: audit_invariants.rs libyoshida4.so
+rustc -O -L . audit_invariants.rs -o audit_invariants
