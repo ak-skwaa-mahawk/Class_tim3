@@ -1,33 +1,33 @@
 CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -O3 -fPIC -Iinclude
 LDFLAGS = -lm
+RUSTC = rustc
+RUSTFLAGS = -O -L . -C link-args="-Wl,-rpath,."
 
-# Binaries & Libraries
-CLI_TARGET = timetable_app
-LIB_TARGET = libyoshida4.so
+OBJS = src/main.o src/unicode_utils.o src/timetable_io.o src/timetable_view.o
+TARGET = timetable_app
+LIB = libyoshida4.so
 LATTICE_BIN = yoshida4_lattice
+AUDIT_BIN = audit_invariants
 
-TIMETABLE_SRCS = src/main.c src/unicode_utils.c src/timetable_io.c src/timetable_view.c
-TIMETABLE_OBJS = $(TIMETABLE_SRCS:.c=.o)
+all: $(TARGET) $(LIB) $(LATTICE_BIN) $(AUDIT_BIN)
 
-all: $(CLI_TARGET) $(LIB_TARGET) $(LATTICE_BIN)
+$(TARGET): $(OBJS)
+$(CC) $(CFLAGS) -o $@ $^
 
-$(CLI_TARGET): $(TIMETABLE_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(TIMETABLE_OBJS)
-
-$(LIB_TARGET): src/yoshida4_api.c
-	$(CC) $(CFLAGS) -shared -o $@ $< $(LDFLAGS)
+$(LIB): src/yoshida4_api.c
+$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(LATTICE_BIN): yoshida4_lattice.c
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(AUDIT_BIN): audit_invariants.rs $(LIB)
+$(RUSTC) $(RUSTFLAGS) $< -o $@
+
+src/%.o: src/%.c
+$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TIMETABLE_OBJS) $(CLI_TARGET) $(LIB_TARGET) $(LATTICE_BIN) schedule_test.csv
+rm -f src/*.o $(TARGET) $(LIB) $(LATTICE_BIN) $(AUDIT_BIN) schedule_test.csv
 
 .PHONY: all clean
-
-audit_invariants: audit_invariants.rs libyoshida4.so
-rustc -O -L . audit_invariants.rs -o audit_invariants
