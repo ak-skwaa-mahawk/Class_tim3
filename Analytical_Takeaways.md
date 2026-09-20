@@ -1,0 +1,3 @@
+Error Divergence: RK4's relative error grows monotonically across the 100,000 steps due to non-zero divergence of the numerical vector field \nabla \cdot \mathbf{f}_{\text{num}} \neq 0.
+​Shadow Invariance: Yoshida-4 experiences no secular drift; error stays bounded within the \sim 10^{-11} to 10^{-12} envelope determined by the 4th-order commutator bracket \{ \{ \{H, V\}, V \}, V \}.
+​Phase Localization: The spatial state vector \mathbf{q} under Yoshida-4 remains confined to the KAM torus encircling \theta^* = -15.000000\text{ rad}, whereas RK4 slowly leaks orbital radius.
