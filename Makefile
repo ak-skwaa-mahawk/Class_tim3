@@ -13,21 +13,21 @@ AUDIT_BIN = audit_invariants
 all: $(TARGET) $(LIB) $(LATTICE_BIN) $(AUDIT_BIN)
 
 $(TARGET): $(OBJS)
-$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 $(LIB): src/yoshida4_api.c
-$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 $(LATTICE_BIN): yoshida4_lattice.c
-$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(AUDIT_BIN): audit_invariants.rs $(LIB)
-$(RUSTC) $(RUSTFLAGS) $< -o $@
+	$(RUSTC) $(RUSTFLAGS) $< -o $@
 
 src/%.o: src/%.c
-$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-rm -f src/*.o $(TARGET) $(LIB) $(LATTICE_BIN) $(AUDIT_BIN) schedule_test.csv
+	rm -f src/*.o $(TARGET) $(LIB) $(LATTICE_BIN) $(AUDIT_BIN) schedule_test.csv
 
 .PHONY: all clean
