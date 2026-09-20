@@ -1,19 +1,30 @@
 CC = gcc
-CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -O2 -Iinclude
-TARGET = timetable_app
+CFLAGS = -std=c11 -Wall -Wextra -Wpedantic -O3 -fPIC -Iinclude
+LDFLAGS = -lm
 
-SRCS = src/main.c src/unicode_utils.c src/timetable_io.c src/timetable_view.c
-OBJS = $(SRCS:.c=.o)
+# Binaries & Libraries
+CLI_TARGET = timetable_app
+LIB_TARGET = libyoshida4.so
+LATTICE_BIN = yoshida4_lattice
 
-all: $(TARGET)
+TIMETABLE_SRCS = src/main.c src/unicode_utils.c src/timetable_io.c src/timetable_view.c
+TIMETABLE_OBJS = $(TIMETABLE_SRCS:.c=.o)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+all: $(CLI_TARGET) $(LIB_TARGET) $(LATTICE_BIN)
+
+$(CLI_TARGET): $(TIMETABLE_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(TIMETABLE_OBJS)
+
+$(LIB_TARGET): src/yoshida4_api.c
+	$(CC) $(CFLAGS) -shared -o $@ $< $(LDFLAGS)
+
+$(LATTICE_BIN): yoshida4_lattice.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET) schedule_test.csv
+	rm -f $(TIMETABLE_OBJS) $(CLI_TARGET) $(LIB_TARGET) $(LATTICE_BIN) schedule_test.csv
 
 .PHONY: all clean
