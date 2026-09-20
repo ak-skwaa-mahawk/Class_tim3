@@ -173,7 +173,7 @@ def generate_verification_report(
     return state_digest
 
 
-def run_empirical_mode() -> None:
+def run_empirical_mode(stream_json: bool = False) -> None:
     try:
         import numpy as np
         from src.transducer_daq import (
@@ -186,9 +186,10 @@ def run_empirical_mode() -> None:
         print("Ensure 'numpy' is installed and 'src/transducer_daq.py' exists.")
         sys.exit(1)
 
-    print("=" * 72)
-    print("  EMPIRICAL TRANSDUCER DAQ AUDIT — 79 HZ HARMONIC CARRIER")
-    print("=" * 72)
+    if not stream_json:
+        print("=" * 72)
+        print("  EMPIRICAL TRANSDUCER DAQ AUDIT — 79 HZ HARMONIC CARRIER")
+        print("=" * 72)
 
     fs = 200000.0
     duration = 5.0
@@ -207,6 +208,25 @@ def run_empirical_mode() -> None:
     crossings = extract_interpolated_crossings(t, signal)
 
     audit = run_empirical_audit(crossings, rpm_nominal=TARGET_RPM, budget=budget)
+    delta_omega = audit.measured_rpm - TARGET_RPM
+
+    if stream_json:
+        payload = {
+            "subsystem": "Class_tim3",
+            "cadence_hz": 78.96,
+            "shaft_speed_rpm": round(float(audit.measured_rpm), 6),
+            "delta_omega_rpm": round(float(delta_omega), 6),
+            "u_a_rpm": round(float(audit.u_a_rpm), 6),
+            "u_b_rpm": round(float(audit.u_b_rpm), 6),
+            "u_c_rpm": round(float(audit.u_c_rpm), 6),
+            "effective_pi": round(float(audit.pi_eff), 7),
+            "u_c_pi_eff": round(float(audit.u_c_pi_eff), 7),
+            "snr": round(float(audit.snr), 2),
+            "z_score": round(float(audit.z_score), 2),
+            "verdict": "ADMITTED" if audit.is_statistically_significant else "REJECTED"
+        }
+        print(json.dumps(payload))
+        sys.exit(0 if audit.is_statistically_significant else 1)
 
     print(f"[MEASURED] Shaft Speed (RPM)     : {audit.measured_rpm:.6f} ± {audit.u_c_rpm:.6f}")
     print(f"[UNCERT]   Type A (Statistical)  : ±{audit.u_a_rpm:.6f} RPM")
@@ -296,10 +316,15 @@ def main() -> None:
         default="",
         help="Write markdown verification report to designated file (e.g., VERIFICATION_REPORT.md)",
     )
+    parser.add_argument(
+        "--stream-json",
+        action="store_true",
+        help="Emit single-line JSON telemetry packet to stdout for socket redirection",
+    )
     args = parser.parse_args()
 
     if args.empirical:
-        run_empirical_mode()
+        run_empirical_mode(stream_json=args.stream_json)
     else:
         run_production_evaluation(eval_only=args.eval_only, report_file=args.report)
 
