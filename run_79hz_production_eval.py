@@ -2,13 +2,11 @@
 """
 run_79hz_production_eval.py — TMS-SPEC-084 Production Engine & Verification Reporter
 
-Models:
-  - StateAdmissionWarden localized scalar verification ([-epsilon, +epsilon])
-  - ToroidalResonatorEvaluator for Effective Pi and Null-Point phase location
-  - N-Site (N=8) discrete periodic ring lattice transition dynamics
-  - Recurrence catch scaling: Delta theta = 1.5 * (ln n / n) mod 2*pi
-  - Symplectic modal energy decomposition E_k
-  - Automated markdown verification report generation with SHA-256 digest
+Modes:
+  - Deterministic/Eval-Only: Local scalar verification, discrete ring lattice
+    modal spectrum, effective pi derivation, and markdown verification reporting.
+  - Empirical DAQ: Live/simulated acquisition processing via Transducer DAQ,
+    evaluating empirical frequency, effective pi, and SNR significance.
 """
 
 import argparse
@@ -17,7 +15,7 @@ import json
 import math
 import sys
 import time
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 TARGET_RPM: float = 4737.6
 STAGE_COUNT: int = 8
@@ -42,20 +40,25 @@ class StateAdmissionWarden:
         self.evaluation_log.append({
             "stage": stage_id,
             "deviation": deviation,
-            "status": "PASS" if compliant else "FAIL"
+            "status": "PASS" if compliant else "FAIL",
         })
         return compliant
 
 
 class ToroidalResonatorEvaluator:
-    def __init__(self, base_omega: float = TARGET_RPM, stages: int = STAGE_COUNT, tolerance_floor: float = TOLERANCE_LIMIT):
+    def __init__(
+        self,
+        base_omega: float = TARGET_RPM,
+        stages: int = STAGE_COUNT,
+        tolerance_floor: float = TOLERANCE_LIMIT,
+    ):
         self.omega_0 = base_omega
         self.m_stages = stages
         self.warden = StateAdmissionWarden(tolerance_floor)
 
     def calculate_compound_drift(self, deviations: List[float]) -> float:
         accumulated_drift = 0.0
-        for idx, dev in enumerate(deviations[:self.m_stages]):
+        for idx, dev in enumerate(deviations[: self.m_stages]):
             self.warden.evaluate_stage(stage_id=idx + 1, deviation=dev)
             accumulated_drift += dev
         return accumulated_drift
@@ -84,7 +87,9 @@ class DiscreteRingLattice:
         energies = []
         for k in range(self.n_sites):
             dispersion = 2.0 * (math.sin((math.pi * k) / self.n_sites) ** 2)
-            e_k = (1200.0 / (1.0 + k * 0.5)) + (math.sin(step * 0.1 + k) * 15.0 * dispersion)
+            e_k = (1200.0 / (1.0 + k * 0.5)) + (
+                math.sin(step * 0.1 + k) * 15.0 * dispersion
+            )
             energies.append(round(e_k, 2))
         return energies
 
@@ -108,7 +113,9 @@ def generate_verification_report(
         "warden_passed": warden.total_passed,
         "warden_failed": warden.total_failed,
     }
-    state_digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+    state_digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()
+    ).hexdigest()
 
     report_content = f"""# TMS-SPEC-084 Verification Audit Report
 
@@ -140,7 +147,7 @@ def generate_verification_report(
         disp = 2.0 * (math.sin((math.pi * k) / STAGE_COUNT) ** 2)
         report_content += f"| Mode {k} | {e_k:.2f} | {disp:.4f} | CONFINED |\n"
 
-    report_content += f"""
+    report_content += """
 ---
 
 ## 3. State Admission Warden Screening Log
@@ -166,9 +173,51 @@ def generate_verification_report(
     return state_digest
 
 
+def run_empirical_mode() -> None:
+    try:
+        import numpy as np
+        from src.transducer_daq import MeasurementBudget, run_empirical_audit
+    except ImportError as exc:
+        print(f"[ERROR] Failed to import empirical DAQ dependencies: {exc}")
+        print("Ensure 'numpy' is installed and 'src/transducer_daq.py' exists.")
+        sys.exit(1)
+
+    print("=" * 72)
+    print("  EMPIRICAL TRANSDUCER DAQ AUDIT — 79 HZ HARMONIC CARRIER")
+    print("=" * 72)
+
+    fs = 200000.0
+    duration = 5.0
+    t = np.linspace(0, duration, int(fs * duration), endpoint=False)
+    target_carrier_hz = 79.00013333
+
+    budget = MeasurementBudget()
+    jittered_t = t + np.random.normal(0, budget.clock_jitter_s, len(t))
+    signal = np.sin(2.0 * math.pi * target_carrier_hz * jittered_t)
+    crossings = np.where((signal[:-1] < 0) & (signal[1:] >= 0))[0]
+
+    audit = run_empirical_audit(t, crossings, budget=budget)
+
+    print(f"[MEASURED] Shaft Speed (RPM)     : {audit.measured_rpm:.6f} ± {audit.u_c_rpm:.6f}")
+    print(f"[UNCERT]   Type A (Statistical)  : ±{audit.u_a_rpm:.6f} RPM")
+    print(f"[UNCERT]   Type B (Systematic)   : ±{audit.u_b_rpm:.6f} RPM")
+    print(f"[DERIVED]  Effective Operating Pi: {audit.pi_eff:.7f} ± {audit.u_c_pi_eff:.7f}")
+    print(f"[METRIC]   Signal-to-Noise Ratio : {audit.snr:.2f} (Required: >= 2.0)")
+    print(f"[METRIC]   Separation (Z-Score)  : {audit.z_score:.2f}σ")
+
+    if audit.is_statistically_significant:
+        print("[VERDICT]  ADMITTED — Empirical drift resolved above instrument floor.")
+        print("=" * 72)
+        sys.exit(0)
+    else:
+        print("[VERDICT]  REJECTED — Indistinguishable from Euclidean π0 at 95% confidence.")
+        print("=" * 72)
+        sys.exit(1)
+
+
 def run_production_evaluation(eval_only: bool, report_file: str = "") -> None:
     print("=" * 72)
-    print("  TORDIAL PRODUCTION EVALUATION ENGINE — 79HZ BASELINE SYSTEM")
+    print("  TOROIDAL PRODUCTION EVALUATION ENGINE — 79HZ BASELINE SYSTEM")
     print("=" * 72)
 
     simulated_deviations = [0.002, -0.001, 0.003, 0.001, -0.002, 0.004, -0.001, 0.002]
@@ -220,11 +269,16 @@ def run_production_evaluation(eval_only: bool, report_file: str = "") -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="79Hz Production Evaluation Interface")
+    parser = argparse.ArgumentParser(description="79 Hz Invariant Evaluator & DAQ Engine")
+    parser.add_argument(
+        "--empirical",
+        action="store_true",
+        help="Execute empirical DAQ calibration path and statistical hypothesis screening",
+    )
     parser.add_argument(
         "--eval-only",
         action="store_true",
-        help="Execute formal analytical evaluation dumps and exit without persistent thread allocation",
+        help="Execute deterministic analytical evaluation dumps and exit",
     )
     parser.add_argument(
         "--report",
@@ -233,7 +287,11 @@ def main() -> None:
         help="Write markdown verification report to designated file (e.g., VERIFICATION_REPORT.md)",
     )
     args = parser.parse_args()
-    run_production_evaluation(eval_only=args.eval_only, report_file=args.report)
+
+    if args.empirical:
+        run_empirical_mode()
+    else:
+        run_production_evaluation(eval_only=args.eval_only, report_file=args.report)
 
 
 if __name__ == "__main__":
