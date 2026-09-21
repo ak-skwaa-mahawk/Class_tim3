@@ -43,13 +43,27 @@ def fetch_json(url: str) -> dict:
 
 
 def parse_report_digest(report_path: str) -> str:
-    pattern = r"(?:State Digest SHA-256|Extracted Digest \(SHA-256\))\s*:\s*([a-fA-F0-9]{64})"
-    with open(report_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    m = re.search(pattern, content)
-    if not m:
-        raise ValueError(f"State digest not found in {report_path}")
-    return m.group(1).lower()
+    # 1. Check receipt first if present
+    try:
+        with open("attestation_receipt.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if "digest_sha256" in data and len(data["digest_sha256"]) == 64:
+                return data["digest_sha256"].lower()
+    except Exception:
+        pass
+
+    # 2. Try report file
+    try:
+        with open(report_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        pattern = r"([a-fA-F0-9]{64})"
+        m = re.search(pattern, content)
+        if m:
+            return m.group(1).lower()
+    except Exception:
+        pass
+
+    raise ValueError(f"State digest could not be resolved from {report_path} or attestation_receipt.json")
 
 
 def audit_inclusion(

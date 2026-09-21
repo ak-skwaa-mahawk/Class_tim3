@@ -4,15 +4,22 @@
   "p2tr_mainnet": "bc1pg00dz9cgcx8rw44w3se62cmdm0ysdsf9u2ch3y9wyleancyxnhqsh44nlh",
   "p2tr_signet": "tb1pg00dz9cgcx8rw44w3se62cmdm0ysdsf9u2ch3y9wyleancyxnhqsqaru9c",
   "network": "signet",
-  "txid": null,
-  "vout": null,
-  "value_sats": null,
-  "block_hash": null,
-  "block_height": null,
-  "confirmations": 0,
-  "merkle_root": null,
-  "tx_index": null,
-  "merkle_siblings": [],
+  "txid": "ee8da3f25f1e772144fc5d4ce40d6de9a4cf06d8cc3ba9ce7fdb42d1408eae14",
+  "vout": 350,
+  "value_sats": 589960,
+  "block_hash": "000000139cde6aed53b015f37aa6a4f6447631f3f0672a884d23986bace5a2fa",
+  "block_height": 323031,
+  "confirmations": 1,
+  "merkle_root": "a8f337ff8efaab2b6ca354c6c7077498219beb886401a161ebc55c2cfd2cdf02",
+  "tx_index": 30,
+  "merkle_siblings": [
+    "2a69ffcd68ed41cb69972ae7326c1e5e43615c9976a203471a8efcea7ae4b00c",
+    "dc638ab7196b1df1d3f9f1827e2abedbbc119c36b4e29ff4e7c3b8cb9852df05",
+    "9e1f46122adc986718e736a68ab2e1eca36a43caf043c6124c02321f28284694",
+    "8635d5c352a7545a2cbeb51c5f63405643b04a97250e29bb08973de9d51563ce",
+    "a870056441b8982f8eb0f0150bc7f52b919189902ea263460bfa1d936d14faf7",
+    "3b9f4ec65acf51e942363e36c60a1da07aee1c9234ceae23b967c5b0e5b7b531"
+  ],
   "op_return_vout": null,
-  "status": "ANCHOR_PENDING"
+  "status": "ANCHORED"
 }

@@ -1,6 +1,6 @@
 # TMS-SPEC-084 Verification Audit Report
 
-- **Generated Timestamp**: 2026-09-20 17:36:21 UTC
+- **Generated Timestamp**: 2026-09-20 18:55:33 UTC
 - **Evaluation Cadence**: 79.0 Hz baseline loop
 - **State Vector SHA-256**: `a44db35bc5f551211e68b497a0e8e8a3a4445ac60586e460a5a63f1f596caff8`
 - **Overall Status**: PASS
@@ -54,3 +54,18 @@
 - **Symplectic Invariant 2-Form**: $\mathrm{d}q \wedge \mathrm{d}p$ preserved via Velocity Verlet (`audit_invariants.rs`).
 - **Troyon Beta Limit**: $\beta_N = 2.15 \le 2.8$ (H-Mode Confined).
 - **Transport Binding**: Gibberlink acoustic/ultrasonic framing verified; Taproot witness anchor ready.
+
+
+## 4. Cryptographic Proof-of-Inclusion Attestation (BIP-341)
+
+| Attestation Parameter | Verified On-Chain Value |
+|:----------------------|:------------------------|
+| **State Digest SHA-256** | `a44db35bc5f551211e68b497a0e8e8a3a4445ac60586e460a5a63f1f596caff8` |
+| **P2TR Commitment Output** | `tb1pg00dz9cgcx8rw44w3se62cmdm0ysdsf9u2ch3y9wyleancyxnhqsqaru9c` |
+| **Funding Transaction (txid)** | `ee8da3f25f1e772144fc5d4ce40d6de9a4cf06d8cc3ba9ce7fdb42d1408eae14` |
+| **Output Index (vout)** | `350` (589960 sats) |
+| **Block Height** | `323031` |
+| **Block Hash** | `000000139cde6aed53b015f37aa6a4f6447631f3f0672a884d23986bace5a2fa` |
+| **Merkle Root** | `a8f337ff8efaab2b6ca354c6c7077498219beb886401a161ebc55c2cfd2cdf02` |
+| **Merkle Index / Path** | Index 30 (6 siblings verified) |
+| **Warden Ledger Status** | **ANCHORED** |
